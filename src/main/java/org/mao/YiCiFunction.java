@@ -14,10 +14,14 @@ import static java.lang.Math.abs;
 
 /**
  * Hello world!
+ *
+ * @author Jianwei Mao
+ *
+ * 2017.03.31
  */
 public class YiCiFunction {
     public static void main(String[] args) throws IOException {
-        File dataFile = new File("D:\\MaoDev\\Dataset1.csv");
+        File dataFile = new File("D:\\MaoDev\\Mao_Machine_Learning_Research\\Dataset1.csv");
         BufferedReader fin = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile)));
 
         Map<Double, Double> xyPair = new HashMap();
