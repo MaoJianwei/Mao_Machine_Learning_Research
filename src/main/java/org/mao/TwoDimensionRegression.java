@@ -11,41 +11,25 @@ import static java.lang.Math.abs;
 
 /**
  * Two Dimension Regression.
- *
+ * <p>
  * Model: R = g(x) = w2 * X^2 + w1 * X^1 + w0
- *
+ * <p>
  * To find out w2, w1, w0
  *
  * @author Jianwei Mao
- *
- * Created by mao on 2017/4/17.
+ *         <p>
+ *         Created by mao on 2017/4/17.
  */
 public class TwoDimensionRegression {
 
     public static void main(String[] args) throws IOException {
-        File dataFile = new File("D:\\MaoDev\\Mao_Machine_Learning_Research\\Dataset1.csv");
-        BufferedReader fin = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile)));
 
         Map<Double, Double> xyPair = new HashMap();
 
-
-        final String DOUHAO = ",";
-        String data;
-        String[] datas;
-        while (true) {
-            data = fin.readLine();
-            if (data == null) {
-                break;
-            }
-
-            datas = data.split(DOUHAO);
-
-            xyPair.put(valueOf(datas[0]), valueOf(datas[1]));
-        }
+        readDataset(xyPair);
 
 
-
-        ExecutorService threadPool = Executors.newFixedThreadPool(6, new ThreadFactory() {
+        ExecutorService threadPool = Executors.newFixedThreadPool(7, new ThreadFactory() {
             int count = 0;
 
             @Override
@@ -55,24 +39,86 @@ public class TwoDimensionRegression {
         });
 
         Future<Double> fAvgX = threadPool.submit(new calAvgX(xyPair));
+        Future<Double> fAvgXPower2 = threadPool.submit(new calAvgXPower2(xyPair));
+        Future<Double> fAvgXPower3 = threadPool.submit(new calAvgXPower3(xyPair));
+        Future<Double> fAvgXPower4 = threadPool.submit(new calAvgXPower4(xyPair));
+        Future<Double> fAvgR = threadPool.submit(new calAvgR(xyPair));
+        Future<Double> fAvgXR = threadPool.submit(new calAvgXR(xyPair));
+        Future<Double> fAvgXPower2R = threadPool.submit(new calAvgXPower2R(xyPair));
 
 
-        double avgX;
+        double avgX, avgXPower2, avgXPower3, avgXPower4, avgR, avgXR, avgXPower2R;
         try {
             avgX = fAvgX.get();
-        } catch (InterruptedException e) {
+            avgXPower2 = fAvgXPower2.get();
+            avgXPower3 = fAvgXPower3.get();
+            avgXPower4 = fAvgXPower4.get();
+            avgR = fAvgR.get();
+            avgXR = fAvgXR.get();
+            avgXPower2R = fAvgXPower2R.get();
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+            shutdownThreadpool(threadPool);
+            return;
         }
 
-        // TODO - calculate A, B, C, D, E, F. and then w2, w1, w0.
 
+        double A, B, C, D, E, F;
+        A = -avgXPower4 + avgXPower2 * avgXPower2;
+        B = -avgXPower3 + avgXPower2 * avgX;
+        C = avgXPower2R - avgR * avgXPower2;
+        D = B;
+        E = -avgXPower2 + avgX * avgX;
+        F = avgXR - avgR * avgX;
+
+
+        double w2, w1, w0;
+        w2 = (E * C - B * F) / (B * D - A * E);
+        w1 = (-C - A * w2) / B;
+        w0 = avgR - w2 * avgXPower2 - w1 * avgX;
+
+
+        System.out.println(String.format("avgX = %s\navgXPower2 = %s\navgXPower3 = %s\navgXPower4 = %s\navgR = %s\navgXR = %s\navgXPower2R = %s\n",
+                avgX, avgXPower2, avgXPower3, avgXPower4, avgR, avgXR, avgXPower2R));
+        System.out.println(String.format("A = %s\nB = %s\nC = %s\nD = %s\nE = %s\nF = %s\n", A, B, C, D, E, F));
+        System.out.println(String.format("w2 = %s\nw1 = %s\nw0 = %s\n", w2, w1, w0));
+        System.out.println("\n-------------------------------------------\n");
+
+        System.out.println(String.format("Amazing! Our Function is:\nR = g(x) = %s * X^2 + %s * X^1 + %s\nGreat Machine Learning!\n", w2, w1, w0));
+
+
+        
+        shutdownThreadpool(threadPool);
+    }
+
+    private static void shutdownThreadpool(ExecutorService threadPool) {
         threadPool.shutdown();
         try {
             threadPool.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             System.out.println("Mao forcibly shutdown now ...");
+        } finally {
+            threadPool.shutdownNow();
+        }
+    }
+
+    private static void readDataset(Map result) throws IOException {
+
+        File dataFile = new File("D:\\MaoDev\\Mao_Machine_Learning_Research\\Dataset1.csv");
+        BufferedReader fin = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile)));
+
+        final String COMMA = ",";
+        String data;
+        String[] datas;
+        while (true) {
+            data = fin.readLine();
+            if (data == null) {
+                break;
+            }
+
+            datas = data.split(COMMA);
+
+            result.put(valueOf(datas[0]), valueOf(datas[1]));
         }
     }
 
@@ -94,7 +140,7 @@ public class TwoDimensionRegression {
 
             double xSum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
+            for (Map.Entry<Double, Double> xy : xySet) {
                 xSum += xy.getKey();
             }
 
@@ -118,13 +164,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double xPower2Sum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                xPower2Sum += (xy.getKey() * xy.getKey());
             }
 
-            return xSum / xySet.size();
+            return xPower2Sum / xySet.size();
         }
     }
 
@@ -144,13 +190,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double xPower3Sum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                xPower3Sum += (xy.getKey() * xy.getKey() * xy.getKey());
             }
 
-            return xSum / xySet.size();
+            return xPower3Sum / xySet.size();
         }
     }
 
@@ -170,13 +216,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double xPower4Sum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                xPower4Sum += (xy.getKey() * xy.getKey() * xy.getKey() * xy.getKey());
             }
 
-            return xSum / xySet.size();
+            return xPower4Sum / xySet.size();
         }
     }
 
@@ -187,7 +233,7 @@ public class TwoDimensionRegression {
 
         final Map xyPairs;
 
-        calAvgX(final Map xyPairs) {
+        calAvgR(final Map xyPairs) {
             this.xyPairs = xyPairs;
         }
 
@@ -196,13 +242,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double rSum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                rSum += xy.getValue();
             }
 
-            return xSum / xySet.size();
+            return rSum / xySet.size();
         }
     }
 
@@ -222,13 +268,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double xrSum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                xrSum += (xy.getKey() * xy.getValue());
             }
 
-            return xSum / xySet.size();
+            return xrSum / xySet.size();
         }
     }
 
@@ -248,13 +294,13 @@ public class TwoDimensionRegression {
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
-            double xSum = 0;
+            double xPower2RSum = 0;
 
-            for(Map.Entry<Double, Double> xy : xySet) {
-                xSum += xy.getKey();
+            for (Map.Entry<Double, Double> xy : xySet) {
+                xPower2RSum += (xy.getKey() * xy.getKey() * xy.getValue());
             }
 
-            return xSum / xySet.size();
+            return xPower2RSum / xySet.size();
         }
     }
 }
