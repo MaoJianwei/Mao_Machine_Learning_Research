@@ -111,7 +111,7 @@ public class TwoDimensionRegression {
 
     private static void readDataset(Map result) throws IOException {
 
-        File dataFile = new File("D:\\MaoDev\\Mao_Machine_Learning_Research\\Dataset1.csv");
+        File dataFile = new File("D:\\MaoDev\\Mao_Machine_Learning_Research\\Datasets\\TwoDimensionRegression_20170417.csv");
         BufferedReader fin = new BufferedReader(new InputStreamReader(new FileInputStream(dataFile)));
 
         final String COMMA = ",";
