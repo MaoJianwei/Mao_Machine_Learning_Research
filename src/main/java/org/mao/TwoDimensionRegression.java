@@ -38,6 +38,8 @@ public class TwoDimensionRegression {
             }
         });
 
+        double start = System.nanoTime();
+
         Future<Double> fAvgX = threadPool.submit(new calAvgX(xyPair));
         Future<Double> fAvgXPower2 = threadPool.submit(new calAvgXPower2(xyPair));
         Future<Double> fAvgXPower3 = threadPool.submit(new calAvgXPower3(xyPair));
@@ -62,6 +64,11 @@ public class TwoDimensionRegression {
             return;
         }
 
+        double stop = System.nanoTime();
+
+        System.out.println(String.format("Running Time: %s\n", stop-start));
+
+
 
         double A, B, C, D, E, F;
         A = -avgXPower4 + avgXPower2 * avgXPower2;
@@ -84,10 +91,10 @@ public class TwoDimensionRegression {
         System.out.println(String.format("w2 = %s\nw1 = %s\nw0 = %s\n", w2, w1, w0));
         System.out.println("\n-------------------------------------------\n");
 
-        System.out.println(String.format("Amazing! Our Function is:\nR = g(x) = %s * X^2 + %s * X^1 + %s\nGreat Machine Learning!\n", w2, w1, w0));
+        System.out.println(String.format("Amazing! Our Function is:\nR = g(x) = %10.8f * X^2 + %10.8f * X^1 + %10.8f\nJianwei Mao: 'Great Machine Learning!'\n", w2, w1, w0));
 
 
-        
+
         shutdownThreadpool(threadPool);
     }
 
@@ -110,7 +117,10 @@ public class TwoDimensionRegression {
         final String COMMA = ",";
         String data;
         String[] datas;
-        while (true) {
+
+        int count = 0;
+
+        while (true && count++ < 2800) {
             data = fin.readLine();
             if (data == null) {
                 break;
@@ -118,7 +128,7 @@ public class TwoDimensionRegression {
 
             datas = data.split(COMMA);
 
-            result.put(valueOf(datas[0]), valueOf(datas[1]));
+            result.put(valueOf(datas[0]), valueOf(datas[2]));
         }
     }
 
@@ -135,6 +145,8 @@ public class TwoDimensionRegression {
 
         @Override
         public Double call() throws Exception {
+
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
@@ -162,6 +174,8 @@ public class TwoDimensionRegression {
         @Override
         public Double call() throws Exception {
 
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
+
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
             double xPower2Sum = 0;
@@ -187,6 +201,8 @@ public class TwoDimensionRegression {
 
         @Override
         public Double call() throws Exception {
+
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
@@ -214,6 +230,8 @@ public class TwoDimensionRegression {
         @Override
         public Double call() throws Exception {
 
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
+
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
             double xPower4Sum = 0;
@@ -239,6 +257,8 @@ public class TwoDimensionRegression {
 
         @Override
         public Double call() throws Exception {
+
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
@@ -266,6 +286,8 @@ public class TwoDimensionRegression {
         @Override
         public Double call() throws Exception {
 
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
+
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
             double xrSum = 0;
@@ -291,6 +313,8 @@ public class TwoDimensionRegression {
 
         @Override
         public Double call() throws Exception {
+
+            System.out.println(String.format("--- %s working ---", Thread.currentThread().getName()));
 
             Set<Map.Entry<Double, Double>> xySet = xyPairs.entrySet();
 
